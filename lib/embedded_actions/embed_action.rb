@@ -10,7 +10,7 @@ module ActionController  #:nodoc:
 
       base.helper do
         def embed_action(options)
-          @controller.send(:embed_action_as_string, options)
+          controller.send(:embed_action_as_string, options)
         end
       end
 
@@ -19,8 +19,8 @@ module ActionController  #:nodoc:
       base.send :attr_accessor, :parent_controller
 
       base.class_eval do
-        alias_method_chain :send_response,        :embedded
-        alias_method_chain :process_cleanup,      :embedded
+        # alias_method_chain :send_response,        :embedded
+        # alias_method_chain :process_cleanup,      :embedded
         alias_method_chain :set_session_options,  :embedded if base.methods.singleton_methods.include? "set_session_options"
         alias_method_chain :flash,                :embedded
 
@@ -29,19 +29,14 @@ module ActionController  #:nodoc:
     end
 
     module ClassMethods
-      # Track parent controller to identify embedded requests
-      def process_with_embedded(request, response, parent_controller = nil) #:nodoc:
-        controller = new
-        controller.parent_controller = parent_controller
-        controller.process(request, response)
-      end
+
     end
 
     module InstanceMethods
-      # Extracts the action_name from the request parameters and performs that action.
-      def process_with_embedded(request, response, method = :perform_action, *arguments) #:nodoc:
-        flash.discard if embedded_request?
-        process_without_embedded(request, response, method, *arguments)
+      def process_with_embedded(action, request, response)
+        @_response = response
+        self.request = request
+        process(action)
       end
 
       def send_response_with_embedded
@@ -82,7 +77,7 @@ module ActionController  #:nodoc:
           embedded_logging(options) do
             response_for_embeded_action = embedded_response(options, false)
 
-            if redirected = response_for_embeded_action.redirected_to
+            if redirected = response_for_embeded_action.location
               embed_action_as_string(redirected)
             else
               response_for_embeded_action.body
@@ -104,23 +99,26 @@ module ActionController  #:nodoc:
 
           klass    = embedded_class(options)
           request  = request_for_embedded(klass.controller_name, options)
+
           if reuse_response
             new_response = response
           else
             if ActionController.const_defined? "Response"
               new_response = ActionController::Response.new
-              ActionController::Response::DEFAULT_HEADERS.each {|k, v| new_response.headers[k] = v}
+              # ActionController::Response::DEFAULT_HEADERS.each {|k, v| new_response.headers[k] = v}
             else
               new_response = response.dup
               new_response.headers.clear
-              response.class::DEFAULT_HEADERS.each { |k, v| new_response.headers[k] = v }
+              # response.class::DEFAULT_HEADERS.each { |k, v| new_response.headers[k] = v }
             end
             
             # Using a content-encoding header prevents output compression filters from messing with this response
             new_response.headers['Content-Encoding'] = "identity"
           end
-          
-          klass.process_with_embedded(request, new_response, self)
+         
+          klass.new.process_with_embedded(request['action'], request, new_response)
+
+          new_response
         end
 
         # determine the controller class for the embedded action request
@@ -139,16 +137,13 @@ module ActionController  #:nodoc:
           request         = self.request.dup
           request.session = self.request.session
 
-          request.instance_variable_set(
-            :@parameters,
-            (options[:params] || {}).with_indifferent_access.update(
-              "controller" => controller_name, "action" => options[:action], "id" => options[:id]
-            )
+          request.path_parameters = request.path_parameters.update(
+            "controller" => controller_name, "action" => options[:action], "id" => options[:id]
           )
-          
-          request.instance_variable_set(:@accepts, [Mime::EMBEDDED])
-          request.instance_variable_set(:@_memoized_accepts, [Mime::EMBEDDED])
-          request.instance_variable_set(:@format, Mime::EMBEDDED)
+
+          request.instance_variable_get(:@env)['action_dispatch.request.query_parameters'] = options[:params] || {}
+          request.instance_variable_get(:@env)['action_dispatch.request.accepts'] = Mime::EMBEDDED
+          request.instance_variable_get(:@env)['action_dispatch.request.formats'] = [ Mime::EMBEDDED ]
 
           request
         end

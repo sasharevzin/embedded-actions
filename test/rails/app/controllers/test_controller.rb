@@ -1,4 +1,4 @@
-class TestController < ActionController::Base
+class TestController < ApplicationController
   cattr_accessor :test_value
   cattr_accessor :another_value
 
@@ -19,6 +19,7 @@ class TestController < ActionController::Base
   end
   
   caches_embedded :cached_variable_action, :options_for_name => Proc.new { {:value => TestController.another_value}}
+
   def cached_variable_action
     @id = params[:id]
     @value = TestController.test_value || "N/A"

@@ -39,7 +39,7 @@ module ActionController
             return true unless cache_this_instance == false
           end
           controller_class = controller_class.superclass
-          controller_class = nil unless controller_class.respond_to? :controller_path
+          controller_class = nil unless controller_class.respond_to? :caches_embedded
         end
 
         return cache_this_instance

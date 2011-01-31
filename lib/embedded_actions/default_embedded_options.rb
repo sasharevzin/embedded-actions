@@ -16,10 +16,12 @@ module ActionController
     module InstanceMethods
       def normalize_embedded_options(options)
         return {} if options.nil?
-        
+
+        options[:params] = options[:params].with_indifferent_access if options[:params]
+
         for key in options.keys
           unless [:controller, :action, :id, :params].include? key.to_sym
-            options[:params] ||= {}
+            options[:params] ||= {}.with_indifferent_access
             value = options.delete(key)
             options[:params][key.to_sym] = value unless options[:params][key.to_sym]
           end
@@ -30,7 +32,7 @@ module ActionController
       # By default, use any default_url_options defined by the application controller
       # This method can be overwritten to provide different defaults for embedded actions
       def default_embedded_options(options)
-        normalize_embedded_options(default_url_options(options))
+        normalize_embedded_options(default_url_options.merge(options))
       end
 
       def rewrite_embedded_options(options) #:nodoc:

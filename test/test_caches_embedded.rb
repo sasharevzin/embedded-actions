@@ -14,7 +14,7 @@ class CachesEmbeddedTest < ActionController::TestCase
     @controller = TestController.new
     @request    = ActionController::TestRequest.new
     @response   = ActionController::TestResponse.new
-    FileUtils.rm_rf "#{RAILS_ROOT}/tmp/cache/views/test.host"
+    FileUtils.rm_rf Rails.root.join "tmp/cache"
   end
 
   def test_embedded_caching
@@ -66,7 +66,7 @@ class CachesEmbeddedTest < ActionController::TestCase
 
   def test_embedded_caching_overrides
     # This page uses explicit overrides to reverse which embedded actions are cached
-    
+   
     TestController.test_value = 1
     get :embedded_overrides
     assert_equal "regular value is 1\ncached value is 1", @response.body, 'First call should not have been cached'

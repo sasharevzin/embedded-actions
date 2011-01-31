@@ -7,14 +7,12 @@ require File.expand_path(File.dirname(__FILE__) + "/rails/test/test_helper")
 #require File.expand_path(File.dirname(__FILE__) + "/../init")
 
 # Re-raise errors caught by the controller.
-class TestController; def rescue_action(e) raise e end; end
-
 class RespondsToTest < ActionController::TestCase
   def setup
     @controller = TestController.new
     @request    = ActionController::TestRequest.new
     @response   = ActionController::TestResponse.new
-    FileUtils.rm_rf "#{RAILS_ROOT}/tmp/cache/test.host"
+    FileUtils.rm_rf Rails.root.join( "tmp/cache" )
   end
 
   def test_responds_to_embedded
