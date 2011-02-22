@@ -6,7 +6,6 @@ module ActionController  #:nodoc:
   module EmbeddedActions
     def self.included(base) # :nodoc:
       base.send :include, InstanceMethods
-      base.extend(ClassMethods)
 
       base.helper do
         def embed_action(options)
@@ -19,8 +18,6 @@ module ActionController  #:nodoc:
       base.send :attr_accessor, :parent_controller
 
       base.class_eval do
-        # alias_method_chain :send_response,        :embedded
-        # alias_method_chain :process_cleanup,      :embedded
         alias_method_chain :set_session_options,  :embedded if base.methods.singleton_methods.include? "set_session_options"
         alias_method_chain :flash,                :embedded
 
@@ -28,24 +25,11 @@ module ActionController  #:nodoc:
       end
     end
 
-    module ClassMethods
-
-    end
-
     module InstanceMethods
       def process_with_embedded(action, request, response)
         @_response = response
         self.request = request
         process(action)
-      end
-
-      def send_response_with_embedded
-        if embedded_request?
-          response.content_type = nil
-        else
-          response.prepare! 
-        end
-        response
       end
 
       protected
@@ -141,7 +125,11 @@ module ActionController  #:nodoc:
             "controller" => controller_name, "action" => options[:action], "id" => options[:id]
           )
 
-          request.instance_variable_get(:@env)['action_dispatch.request.query_parameters'] = options[:params] || {}
+          parameters = options[:params] || {}
+          parameters = parameters.merge(request.path_parameters)
+          parameters = parameters.with_indifferent_access
+
+          request.instance_variable_get(:@env)['action_dispatch.request.parameters'] = parameters
           request.instance_variable_get(:@env)['action_dispatch.request.accepts'] = Mime::EMBEDDED
           request.instance_variable_get(:@env)['action_dispatch.request.formats'] = [ Mime::EMBEDDED ]
 
@@ -161,10 +149,6 @@ module ActionController  #:nodoc:
 
         def set_session_options_with_embedded(request)
           set_session_options_without_embedded(request) unless embedded_request?
-        end
-
-        def process_cleanup_with_embedded
-          process_cleanup_without_embedded unless embedded_request?
         end
     end
   end

@@ -30,7 +30,11 @@ class EmbeddedActionTest < ActionController::TestCase
     get :inline_erb_action, :erb => "<%= embed_action :action => 'dump_params', :id => 'the id', :params => {:color => 'blue'} %>"
     assert_equal "Params: action: dump_params, color: blue, controller: test, id: the id", @response.body, "embed_action should pass params as expected"
     assert_equal "text/html", @response.content_type
-                     
+
+    post :inline_erb_action, :erb => "<%= embed_action :action => 'dump_params', :id => 'the id', :color => 'blue' %>"
+    assert_equal "Params: action: dump_params, color: blue, controller: test, id: the id", @response.body, "embed_action should merge into params anything that's not standard"
+    assert_equal "text/html", @response.content_type
+
     get :inline_erb_action, :erb => "<%= embed_action :action => 'dump_params', :id => 'the id', :color => 'blue' %>"
     assert_equal "Params: action: dump_params, color: blue, controller: test, id: the id", @response.body, "embed_action should merge into params anything that's not standard"
     assert_equal "text/html", @response.content_type

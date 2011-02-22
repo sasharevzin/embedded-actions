@@ -3,14 +3,10 @@ module ActionController
 
     def self.included(base) # :nodoc:
       base.send :include, InstanceMethods
-      base.extend(ClassMethods)
 
       base.class_eval do
         alias_method_chain :embed_action_as_string, :default_options
       end
-    end
-
-    module ClassMethods
     end
   
     module InstanceMethods
@@ -42,6 +38,7 @@ module ActionController
           options[:params] = defaults[:params].merge(options[:params] || {}) if defaults[:params]
           options = defaults.merge(options)
         end
+
         options
       end
       
