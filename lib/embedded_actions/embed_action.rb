@@ -122,7 +122,7 @@ module ActionController  #:nodoc:
           request.session = self.request.session
 
           request.path_parameters = request.path_parameters.update(
-            "controller" => controller_name, "action" => options[:action], "id" => options[:id]
+            :controller => controller_name, :action => options[:action], :id => options[:id]
           )
 
           parameters = options[:params] || {}
