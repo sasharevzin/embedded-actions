@@ -130,8 +130,8 @@ module ActionController  #:nodoc:
           parameters = parameters.with_indifferent_access
 
           request.instance_variable_get(:@env)['action_dispatch.request.parameters'] = parameters
-          request.instance_variable_get(:@env)['action_dispatch.request.accepts'] = Mime::EMBEDDED
-          request.instance_variable_get(:@env)['action_dispatch.request.formats'] = [ Mime::EMBEDDED ]
+          # request.instance_variable_get(:@env)['action_dispatch.request.accepts'] = Mime::EMBEDDED
+          # request.instance_variable_get(:@env)['action_dispatch.request.formats'] = [ Mime::EMBEDDED ]
 
           request
         end
